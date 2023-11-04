@@ -60,27 +60,27 @@ def refresh_access_token():
 def get_streamers():
     streamers = {}
     streamers_missing_id = []
-    file = open(STREAMER_LIST_LOCATION, 'r')
-    lines = file.readlines()
-    if len(lines) > 0:
-        for line in lines:
-            if not line.isspace() and not line.startswith("#"):
-                line = line.replace("\n", "")
-                streamer_name = line.split(",")[0]
-                if "," in line:
-                    streamer_id = line.split(",")[1]
-                else:
-                    streamer_id = ""
-                if streamer_id == "":
-                    streamers_missing_id.append(streamer_name)
-                else:
-                    streamers[streamer_id] = streamer_name
-    if len(streamers_missing_id) > 0:
-        update_streamer_list_file_with_missing_ids(streamers_missing_id)
-        updated_streamers = get_streamers_from_file_by_name_list(streamers_missing_id)
-        for streamer_id, streamer_name in updated_streamers.items():
-            streamers[streamer_id] = streamer_name
-    return streamers
+    with open(STREAMER_LIST_LOCATION, 'r') as file:
+        lines = file.readlines()
+        if len(lines) > 0:
+            for line in lines:
+                if not line.isspace() and not line.startswith("#"):
+                    line = line.replace("\n", "")
+                    streamer_name = line.split(",")[0]
+                    if "," in line:
+                        streamer_id = line.split(",")[1]
+                    else:
+                        streamer_id = ""
+                    if streamer_id == "":
+                        streamers_missing_id.append(streamer_name)
+                    else:
+                        streamers[streamer_id] = streamer_name
+        if len(streamers_missing_id) > 0:
+            update_streamer_list_file_with_missing_ids(streamers_missing_id)
+            updated_streamers = get_streamers_from_file_by_name_list(streamers_missing_id)
+            for streamer_id, streamer_name in updated_streamers.items():
+                streamers[streamer_id] = streamer_name
+        return streamers
 
 
 def update_streamer_list_file_with_missing_ids(streamers_missing_id: list):
