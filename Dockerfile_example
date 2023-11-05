@@ -7,4 +7,4 @@ RUN pip install -r twitch-recording-manager/requirements.txt
 
 COPY config.py /twitch-recording-manager/
 
-CMD ["python3", "-u", "twitch-recording-manager/start_recording.py"]
+CMD ["python3", "-u", "/twitch-recording-manager/start_recording.py"]

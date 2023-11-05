@@ -12,3 +12,23 @@ You can configure a bash hook script to run when a recording completes, this wil
 This can be helpful when you want to run post processing on the completed recording or move it to colder storage
 
 You can also configure reporting currently live streamers to influxdb for monitoring in grafana. You can set the infux url for the http api and the payload. streamer_name and stream_title will be inserted into the payload string, so you can use "{streamer_name}" and "{stream_title}" in the string and they will be replaced with the streamer name and title respectively when the request body is built
+
+### Getting started
+
+The easiest way to run this would probably be Docker. I have only tested this on linux and I'm fairly certain it won't work right on MacOS or Windows. So unless you're on linux Docker will be the simplest
+- Download the example Dockerfile, rename it to just Dockerfile
+- Download the config.py file and configure it how you like. Note that when running this script in Docker the paths in config.py will be relative to inside the container, so make use of volume mounts
+- Build the image 
+
+``` bash
+docker build -t twitch-recording-manager:latest .
+```
+
+- Run the container (note the -v volume mounts)
+
+``` bash
+docker run -d --name twitch-recording-manager \
+  -v streamer_list.txt:/streamer_list.txt \
+  -v downloads/:/downloads/ \
+  --restart unless-stopped twitch-recording-manager:latest
+```
