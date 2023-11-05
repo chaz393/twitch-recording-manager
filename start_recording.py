@@ -1,14 +1,7 @@
 import requests
 import time
+from config import Config
 
-
-# configuration
-CLIENT_ID = ""
-CLIENT_SECRET = ""
-STREAMER_LIST_LOCATION = ""
-TEMP_DOWNLOAD_LOCATION = ""
-FINISHED_DOWNLOAD_LOCATION = ""
-REFRESH_INTERVAL = 60  # interval in seconds to refresh streams
 
 # global variables
 access_token = ""
@@ -21,30 +14,30 @@ def start():
             refresh_access_token_if_needed()
         except Exception as e:
             print(e)
-            time.sleep(REFRESH_INTERVAL)
+            time.sleep(Config.REFRESH_INTERVAL)
             continue
         try:
             streamers = get_streamers()
             print(streamers)
         except Exception as e:
             print(e)
-            time.sleep(REFRESH_INTERVAL)
+            time.sleep(Config.REFRESH_INTERVAL)
             continue
         try:
             update_streamer_list_file_with_names(list(streamers.keys()))
         except Exception as e:
             print(e)
-            pass
-        time.sleep(REFRESH_INTERVAL)
+            pass  # updating names isn't really required, continue the flow even if this fails
+        time.sleep(Config.REFRESH_INTERVAL)
 
 
 def refresh_access_token_if_needed():
-    if access_token == "" or access_token_expiration < (time.time() + (REFRESH_INTERVAL * 2)):
+    if access_token == "" or access_token_expiration < (time.time() + (Config.REFRESH_INTERVAL * 2)):
         refresh_access_token()
 
 
 def refresh_access_token():
-    url = f"https://id.twitch.tv/oauth2/token?client_id={CLIENT_ID}&client_secret={CLIENT_SECRET}" \
+    url = f"https://id.twitch.tv/oauth2/token?client_id={Config.CLIENT_ID}&client_secret={Config.CLIENT_SECRET}" \
           f"&grant_type=client_credentials"
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
     request = requests.post(url, headers=headers)
@@ -60,7 +53,7 @@ def refresh_access_token():
 def get_streamers():
     streamers = {}
     streamers_missing_id = []
-    with open(STREAMER_LIST_LOCATION, 'r') as file:
+    with open(Config.STREAMER_LIST_LOCATION, 'r') as file:
         lines = file.readlines()
         if len(lines) > 0:
             for line in lines:
@@ -76,6 +69,7 @@ def get_streamers():
                     else:
                         streamers[streamer_id] = streamer_name
         if len(streamers_missing_id) > 0:
+            print(f"fetching userId for the following users: {streamers_missing_id}")
             update_streamer_list_file_with_missing_ids(streamers_missing_id)
             updated_streamers = get_streamers_from_file_by_name_list(streamers_missing_id)
             for streamer_id, streamer_name in updated_streamers.items():
@@ -98,7 +92,7 @@ def get_streamer_ids_by_names(usernames: list):
             first_username = False
         else:
             url = url + f"&login={username}"
-    headers = {'Client-Id': CLIENT_ID, 'Authorization': f'Bearer {access_token}'}
+    headers = {'Client-Id': Config.CLIENT_ID, 'Authorization': f'Bearer {access_token}'}
     request = requests.get(url, headers=headers)
     response = request.json()
     streamers = {}
@@ -109,10 +103,10 @@ def get_streamer_ids_by_names(usernames: list):
 
 def insert_streamer_id_to_name(streamer_name: str, streamer_id: str):
     old_file_contents = []
-    with open(STREAMER_LIST_LOCATION, 'r') as file:
+    with open(Config.STREAMER_LIST_LOCATION, 'r') as file:
         for line in file.readlines():
             old_file_contents.append(line)
-    with open(STREAMER_LIST_LOCATION, 'w') as file:
+    with open(Config.STREAMER_LIST_LOCATION, 'w') as file:
         for line in old_file_contents:
             if "," in line:
                 current_line_streamer_name = line.split(",")[0]
@@ -126,7 +120,7 @@ def insert_streamer_id_to_name(streamer_name: str, streamer_id: str):
 
 def get_streamers_from_file_by_name_list(streamer_names: list):
     streamers = {}
-    with open(STREAMER_LIST_LOCATION, 'r') as file:
+    with open(Config.STREAMER_LIST_LOCATION, 'r') as file:
         for line in file.readlines():
             if not line.isspace() and not line.startswith("#"):
                 line = line.replace("\n", "")
@@ -139,26 +133,27 @@ def get_streamers_from_file_by_name_list(streamer_names: list):
 
 def update_streamer_list_file_with_names(streamer_ids: list):
     streamers_to_update = get_streamers_that_need_updating(streamer_ids)
-    old_file_contents = []
-    with open(STREAMER_LIST_LOCATION, 'r') as file:
-        for line in file.readlines():
-            old_file_contents.append(line)
-    with open(STREAMER_LIST_LOCATION, 'w') as file:
-        for line in old_file_contents:
-            streamer_id = line.split(",")[1].replace("\n", "")
-            if streamer_id in streamers_to_update:
-                old_streamer_name = line.split(",")[0]
-                print(f"updating streamer id: {streamer_id}, name: {old_streamer_name} to "
-                      f"{streamers_to_update[streamer_id]}")
-                file.write(f"{streamers_to_update[streamer_id]},{streamer_id}\n")
-            else:
-                file.write(line)
+    if len(streamers_to_update) > 0:
+        old_file_contents = []
+        with open(Config.STREAMER_LIST_LOCATION, 'r') as file:
+            for line in file.readlines():
+                old_file_contents.append(line)
+        with open(Config.STREAMER_LIST_LOCATION, 'w') as file:
+            for line in old_file_contents:
+                streamer_id = line.split(",")[1].replace("\n", "")
+                if streamer_id in streamers_to_update:
+                    old_streamer_name = line.split(",")[0]
+                    print(f"updating streamer id: {streamer_id}, name: {old_streamer_name} to "
+                          f"{streamers_to_update[streamer_id]}")
+                    file.write(f"{streamers_to_update[streamer_id]},{streamer_id}\n")
+                else:
+                    file.write(line)
 
 
 def get_streamers_that_need_updating(streamer_ids: list):
     updated_streamers = get_updated_streamers_by_ids(streamer_ids)
     streamers_to_update = {}
-    with open(STREAMER_LIST_LOCATION, 'r') as file:
+    with open(Config.STREAMER_LIST_LOCATION, 'r') as file:
         for line in file.readlines():
             old_streamer_name = line.split(",")[0]
             streamer_id = line.split(",")[1].replace("\n", "")
@@ -176,7 +171,7 @@ def get_updated_streamers_by_ids(streamer_ids: list):
             first_id = False
         else:
             url = url + f"&id={streamer_id}"
-    headers = {'Client-Id': CLIENT_ID, 'Authorization': f'Bearer {access_token}'}
+    headers = {'Client-Id': Config.CLIENT_ID, 'Authorization': f'Bearer {access_token}'}
     request = requests.get(url, headers=headers)
     response = request.json()
     streamers = {}
