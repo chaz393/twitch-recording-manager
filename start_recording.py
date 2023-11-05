@@ -22,6 +22,7 @@ def start():
             try_updating_streamer_names_in_file(list(streamers.keys()))
             streams = get_streams_for_user_ids(list(streamers.keys()))
             print(f"streams live right now: {streams}")
+            report_live_streamers_to_influx(streams)
             start_recording_if_not_already(streams)
         except Exception as e:
             print(e)
@@ -216,6 +217,19 @@ def strip_illegal_chars_from_title(title: str):
         if char not in allowed_chars:
             title = title.replace(char, "")
     return title
+
+
+def report_live_streamers_to_influx(streams: dict):
+    if Config.INFLUX_REPORTING_URL != "":
+        for streamer_name, stream_title in streams.items():
+            url = Config.INFLUX_REPORTING_URL
+            body = Config.INFLUX_LIVE_STREAMERS_REPORTING_PAYLOAD\
+                .format(streamer_name=streamer_name, stream_title=stream_title)
+            try:
+                requests.post(url, data=body)
+            except Exception as e:
+                print(e)
+                pass  # if this fails it's not a big deal
 
 
 def start_recording_if_not_already(streams: dict):

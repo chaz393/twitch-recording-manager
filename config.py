@@ -4,4 +4,6 @@ class Config:
     STREAMER_LIST_LOCATION = ""
     DOWNLOAD_LOCATION = ""
     RECORDING_FINISHED_HOOK_SCRIPT = ""
+    INFLUX_REPORTING_URL = ""
+    INFLUX_LIVE_STREAMERS_REPORTING_PAYLOAD = ""
     REFRESH_INTERVAL = 60  # interval in seconds to refresh streams
