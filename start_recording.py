@@ -11,19 +11,24 @@ from config import Config
 def start():
     while True:
         try:
-            refresh_access_token_if_needed()
-            streamers = get_streamers()
-            print(f"streamers in list: {streamers}")
-            try_updating_streamer_names_in_file(list(streamers.keys()))
-            streams = get_streams_for_user_ids(list(streamers.keys()))
-            print(f"streams live right now: {streams}")
-            report_live_streamers_to_influx(streams)
-            start_recording_if_not_already(streams)
-        except Exception as e:
-            print(e)
+            try:
+                refresh_access_token_if_needed()
+                streamers = get_streamers()
+                print(f"streamers in list: {streamers}")
+                try_updating_streamer_names_in_file(list(streamers.keys()))
+                streams = get_streams_for_user_ids(list(streamers.keys()))
+                print(f"streams live right now: {streams}")
+                report_live_streamers_to_influx(streams)
+                start_recording_if_not_already(streams)
+            except Exception as e:
+                print(e)
+                time.sleep(Config.REFRESH_INTERVAL)
+                continue
             time.sleep(Config.REFRESH_INTERVAL)
-            continue
-        time.sleep(Config.REFRESH_INTERVAL)
+        except KeyboardInterrupt:
+            print("stopping...")
+            for thread in recording_threads.values():
+                thread.stop_event.set()
 
 
 def refresh_access_token_if_needed():
