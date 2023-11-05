@@ -1,0 +1,1 @@
+echo "streamer name: $1 filename: $2 full path: $3"

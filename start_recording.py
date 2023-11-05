@@ -8,11 +8,6 @@ from datetime import datetime
 from config import Config
 
 
-# global variables
-access_token = ""
-access_token_expiration = 0
-
-
 def start():
     while True:
         try:
@@ -242,7 +237,7 @@ def start_recording_if_not_already(streams: dict):
             filename = f"{streamer_name}_TwitchVOD_{current_time}_{stream_title}.mp4"
             full_path = streamer_directory + filename
             create_streamer_folder_if_not_exists(streamer_directory)
-            start_recording(full_path, streamer_name)
+            start_recording(filename, full_path, streamer_name)
 
 
 def does_process_exist_for_streamer(streamer_name: str):
@@ -267,18 +262,22 @@ def create_streamer_folder_if_not_exists(streamer_directory: str):
         os.mkdir(streamer_directory)
 
 
-def start_recording(full_path: str, streamer_name: str):
-    thread = RecordingThread(full_path, streamer_name, recording_thread_finished_callback)
+def start_recording(filename: str, full_path: str, streamer_name: str):
+    thread = RecordingThread(streamer_name, filename, full_path, recording_thread_finished_callback)
     thread.start()
     recording_threads[thread.ident] = thread
 
 
-def recording_thread_finished_callback(threadd_ident: int, full_path: str, streamer_name: str):
+def recording_thread_finished_callback(threadd_ident: int, streamer_name: str, filename: str, full_path: str):
     recording_threads.pop(threadd_ident)
     if Config.RECORDING_FINISHED_HOOK_SCRIPT != "":
-        subprocess.Popen(["bash", Config.RECORDING_FINISHED_HOOK_SCRIPT, full_path, streamer_name])
+        subprocess.Popen(["bash", Config.RECORDING_FINISHED_HOOK_SCRIPT, streamer_name, filename, full_path])
 
 
+# global variables
 recording_threads = {}
+access_token = ""
+access_token_expiration = 0
+
 if __name__ == "__main__":
     start()
