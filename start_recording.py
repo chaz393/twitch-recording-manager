@@ -1,5 +1,10 @@
+import subprocess
 import requests
 import time
+import psutil
+import os
+from RecordingThread import RecordingThread
+from datetime import datetime
 from config import Config
 
 
@@ -12,22 +17,16 @@ def start():
     while True:
         try:
             refresh_access_token_if_needed()
-        except Exception as e:
-            print(e)
-            time.sleep(Config.REFRESH_INTERVAL)
-            continue
-        try:
             streamers = get_streamers()
-            print(streamers)
+            print(f"streamers in list: {streamers}")
+            try_updating_streamer_names_in_file(list(streamers.keys()))
+            streams = get_streams_for_user_ids(list(streamers.keys()))
+            print(f"streams live right now: {streams}")
+            start_recording_if_not_already(streams)
         except Exception as e:
             print(e)
             time.sleep(Config.REFRESH_INTERVAL)
             continue
-        try:
-            update_streamer_list_file_with_names(list(streamers.keys()))
-        except Exception as e:
-            print(e)
-            pass  # updating names isn't really required, continue the flow even if this fails
         time.sleep(Config.REFRESH_INTERVAL)
 
 
@@ -131,6 +130,14 @@ def get_streamers_from_file_by_name_list(streamer_names: list):
     return streamers
 
 
+def try_updating_streamer_names_in_file(streamer_ids: list):
+    try:
+        update_streamer_list_file_with_names(streamer_ids)
+    except Exception as e:
+        print(e)
+        pass  # updating names isn't really required, continue the flow even if this fails
+
+
 def update_streamer_list_file_with_names(streamer_ids: list):
     streamers_to_update = get_streamers_that_need_updating(streamer_ids)
     if len(streamers_to_update) > 0:
@@ -180,5 +187,84 @@ def get_updated_streamers_by_ids(streamer_ids: list):
     return streamers
 
 
+def get_streams_for_user_ids(stream_ids: list):
+    url = "https://api.twitch.tv/helix/streams?user_id="
+    first_user = True
+    for stream_id in stream_ids:
+        if first_user:
+            url = url + stream_id
+            first_user = False
+        else:
+            url = url + f"&user_id={stream_id}"
+    headers = {'Client-Id': Config.CLIENT_ID, 'Authorization': f'Bearer {access_token}'}
+    request = requests.get(url, headers=headers)
+    response = request.json()
+    streams_response = response["data"]
+    streams = {}
+    if len(streams_response) > 0:
+        for stream in streams_response:
+            streamer_name = stream["user_login"]
+            stream_title = stream["title"]
+            streams[streamer_name] = strip_illegal_chars_from_title(stream_title)
+    return streams
+
+
+def strip_illegal_chars_from_title(title: str):
+    allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789_-"
+    title = title.replace(" ", "_")
+    for char in title:
+        if char not in allowed_chars:
+            title = title.replace(char, "")
+    return title
+
+
+def start_recording_if_not_already(streams: dict):
+    for streamer_name, stream_title in streams.items():
+        process_exists = does_process_exist_for_streamer(streamer_name)
+        if not process_exists:
+            print(f"{streamer_name} process does not exist, starting now")
+            streamer_directory = f"{Config.DOWNLOAD_LOCATION}/{streamer_name}/"
+            current_time = datetime.now().strftime('%Y-%m-%d_%H%M%S')
+            filename = f"{streamer_name}_TwitchVOD_{current_time}_{stream_title}.mp4"
+            full_path = streamer_directory + filename
+            create_streamer_folder_if_not_exists(streamer_directory)
+            start_recording(full_path, streamer_name)
+
+
+def does_process_exist_for_streamer(streamer_name: str):
+    streamlink_found = False
+    streamer_name_found = False
+    mp4_found = False
+    for proc in psutil.process_iter():
+        for arg in proc.cmdline():
+            if "streamlink" in arg:
+                streamlink_found = True
+            if streamer_name in arg:
+                streamer_name_found = True
+            if "mp4" in arg:
+                mp4_found = True
+            if streamlink_found and streamer_name_found and mp4_found:
+                return True
+    return False
+
+
+def create_streamer_folder_if_not_exists(streamer_directory: str):
+    if not os.path.exists(streamer_directory):
+        os.mkdir(streamer_directory)
+
+
+def start_recording(full_path: str, streamer_name: str):
+    thread = RecordingThread(full_path, streamer_name, recording_thread_finished_callback)
+    thread.start()
+    recording_threads[thread.ident] = thread
+
+
+def recording_thread_finished_callback(threadd_ident: int, full_path: str, streamer_name: str):
+    recording_threads.pop(threadd_ident)
+    if Config.RECORDING_FINISHED_HOOK_SCRIPT != "":
+        subprocess.Popen(["bash", Config.RECORDING_FINISHED_HOOK_SCRIPT, full_path, streamer_name])
+
+
+recording_threads = {}
 if __name__ == "__main__":
     start()
