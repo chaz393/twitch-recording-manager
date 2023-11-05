@@ -29,6 +29,8 @@ def start():
             print("stopping...")
             for thread in recording_threads.values():
                 thread.stop_event.set()
+            exit()
+
 
 
 def refresh_access_token_if_needed():
