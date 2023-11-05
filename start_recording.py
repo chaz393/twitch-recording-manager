@@ -245,15 +245,18 @@ def does_process_exist_for_streamer(streamer_name: str):
     streamer_name_found = False
     mp4_found = False
     for proc in psutil.process_iter():
-        for arg in proc.cmdline():
-            if "streamlink" in arg:
-                streamlink_found = True
-            if streamer_name in arg:
-                streamer_name_found = True
-            if "mp4" in arg:
-                mp4_found = True
-            if streamlink_found and streamer_name_found and mp4_found:
-                return True
+        try:
+            for arg in proc.cmdline():
+                if "streamlink" in arg:
+                    streamlink_found = True
+                if streamer_name in arg:
+                    streamer_name_found = True
+                if "mp4" in arg:
+                    mp4_found = True
+                if streamlink_found and streamer_name_found and mp4_found:
+                    return True
+        except psutil.ZombieProcess:
+            continue
     return False
 
 
