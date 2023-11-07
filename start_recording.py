@@ -108,10 +108,8 @@ def insert_streamer_id_to_name(streamer_name: str, streamer_id: str):
             old_file_contents.append(line)
     with open(Config.STREAMER_LIST_LOCATION, 'w') as file:
         for line in old_file_contents:
-            if line.startswith("#"):
-                file.write(f"{line}")
-                continue
-            if line.isspace():
+            if line.isspace() or line.startswith("#"):
+                file.write(line)
                 continue
             if "," in line:
                 current_line_streamer_name = line.split(",")[0]
@@ -153,9 +151,8 @@ def update_streamer_list_file_with_names(streamer_ids: list):
                 old_file_contents.append(line)
         with open(Config.STREAMER_LIST_LOCATION, 'w') as file:
             for line in old_file_contents:
-                if line.startswith("#"):
+                if line.isspace() or line.startswith("#"):
                     file.write(line)
-                if line.isspace():
                     continue
                 streamer_id = line.split(",")[1].replace("\n", "")
                 if streamer_id in streamers_to_update:
