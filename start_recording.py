@@ -118,7 +118,7 @@ def insert_streamer_id_to_name(streamer_name: str, streamer_id: str):
             if current_line_streamer_name == streamer_name:
                 file.write(f"{streamer_name},{streamer_id}\n")
             else:
-                file.write(f"{line}")
+                file.write(line)
 
 
 def get_streamers_from_file_by_name_list(streamer_names: list):
