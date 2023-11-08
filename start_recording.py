@@ -14,6 +14,7 @@ def start():
             refresh_access_token_if_needed()
             streamers = get_streamers()
             print(f"streamers in list: {streamers}")
+            stop_recording_for_users_not_in_streamers_list(streamers)
             if len(streamers) == 0:
                 time.sleep(Config.REFRESH_INTERVAL)
                 continue
