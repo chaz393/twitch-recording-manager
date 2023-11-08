@@ -14,6 +14,9 @@ def start():
             refresh_access_token_if_needed()
             streamers = get_streamers()
             print(f"streamers in list: {streamers}")
+            if len(streamers) == 0:
+                time.sleep(Config.REFRESH_INTERVAL)
+                continue
             try_updating_streamer_names_in_file(list(streamers.keys()))
             streams = get_streams_for_user_ids(list(streamers.keys()))
             print(f"streams live right now: {streams}")
