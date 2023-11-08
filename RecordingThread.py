@@ -22,7 +22,7 @@ class RecordingThread(threading.Thread):
         while process.poll is None:  # wait for process to end
             self.stop_event.wait(1)
         print(f"{self.streamer_name} stopping")
-        self.thread_finished_callback(self.ident, self.streamer_name, self.filename, self.full_path)
+        self.thread_finished_callback(self.streamer_name, self.filename, self.full_path)
 
     @staticmethod
     def start_recording(streamer_name: str, full_path: str):

@@ -19,6 +19,7 @@ def start():
             print(f"streams live right now: {streams}")
             report_live_streamers_to_influx(streams)
             start_recording_if_not_already(streams)
+            stop_recording_for_users_not_in_streamers_list(streamers)
             time.sleep(Config.REFRESH_INTERVAL)
         except KeyboardInterrupt:
             print("stopping...")
@@ -254,23 +255,7 @@ def start_recording_if_not_already(streams: dict):
 
 
 def does_process_exist_for_streamer(streamer_name: str):
-    streamlink_found = False
-    streamer_name_found = False
-    mp4_found = False
-    for proc in psutil.process_iter():
-        try:
-            for arg in proc.cmdline():
-                if "streamlink" in arg:
-                    streamlink_found = True
-                if streamer_name in arg:
-                    streamer_name_found = True
-                if "mp4" in arg:
-                    mp4_found = True
-                if streamlink_found and streamer_name_found and mp4_found:
-                    return True
-        except psutil.ZombieProcess:
-            continue
-    return False
+    return streamer_name in recording_threads.keys()
 
 
 def create_streamer_folder_if_not_exists(streamer_directory: str):
@@ -281,13 +266,19 @@ def create_streamer_folder_if_not_exists(streamer_directory: str):
 def start_recording(filename: str, full_path: str, streamer_name: str):
     thread = RecordingThread(streamer_name, filename, full_path, recording_thread_finished_callback)
     thread.start()
-    recording_threads[thread.ident] = thread
+    recording_threads[streamer_name] = thread
 
 
-def recording_thread_finished_callback(threadd_ident: int, streamer_name: str, filename: str, full_path: str):
-    recording_threads.pop(threadd_ident)
+def recording_thread_finished_callback(streamer_name: str, filename: str, full_path: str):
+    recording_threads.pop(streamer_name)
     if Config.RECORDING_FINISHED_HOOK_SCRIPT != "":
         subprocess.Popen(["bash", Config.RECORDING_FINISHED_HOOK_SCRIPT, streamer_name, filename, full_path])
+
+
+def stop_recording_for_users_not_in_streamers_list(streamers: {}):
+    for recording_thread_streamer_name, recording_thread in recording_threads.items():
+        if recording_thread_streamer_name not in streamers.values():
+            recording_thread.stop_event.set()
 
 
 # global variables
