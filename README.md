@@ -1,4 +1,4 @@
-# twitch-recording-manager
+# twitch-recording-manager (forked)
 This project will automate the recording of twitch streams. The recording is done using Streamlink
 
 
