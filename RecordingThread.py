@@ -27,5 +27,5 @@ class RecordingThread(threading.Thread):
     @staticmethod
     def start_recording(streamer_name: str, full_path: str):
         params = ["streamlink", "-o", full_path, f"https://www.twitch.tv/{streamer_name}", "best",
-                  "--twitch-disable-hosting"]
+                  "--twitch-disable-hosting", "--twitch-disable-ads"]
         return subprocess.Popen(params)
