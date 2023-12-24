@@ -29,6 +29,6 @@ class RecordingThread(threading.Thread):
     def start_recording(streamer_name: str, full_path: str, twitch_oauth_token):
         params = ["streamlink", "-o", full_path, f"https://www.twitch.tv/{streamer_name}", "best",
                   "--twitch-disable-hosting", "--twitch-disable-ads"]
-        if twitch_oauth_token is not None:
-            params.extend(["--twitch-api-header", "Authorization=OAuth " + twitch_oauth_token])
+        if twitch_oauth_token is not "":
+            params.extend([f"--twitch-api-header=\"Authorization=OAuth {twitch_oauth_token}\""])
         return subprocess.Popen(params)

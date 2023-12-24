@@ -289,10 +289,5 @@ recording_threads = {}
 access_token = ""
 access_token_expiration = 0
 
-if Config.TWITCH_OAUTH_TOKEN != "":
-    twitch_oauth_token = Config.TWITCH_OAUTH_TOKEN
-else:
-    Config.TWITCH_OAUTH_TOKEN = None
-
 if __name__ == "__main__":
     start()
