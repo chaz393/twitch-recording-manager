@@ -277,10 +277,6 @@ def create_streamer_folder_if_not_exists(streamer_directory: str):
 <<<<<<< HEAD
 def start_recording(filename: str, full_path: str, streamer_name: str):
     thread = RecordingThread(streamer_name, filename, full_path, recording_thread_finished_callback)
-=======
-def start_recording(filename: str, full_path: str, streamer_name: str, twitch_oauth_token):
-    thread = RecordingThread(streamer_name, filename, full_path, twitch_oauth_token, recording_thread_finished_callback)
->>>>>>> adac535 (Add Streamlink --twitch-api-header option)
     thread.start()
     recording_threads[streamer_name] = thread
 
