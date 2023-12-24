@@ -266,7 +266,7 @@ def create_streamer_folder_if_not_exists(streamer_directory: str):
         os.mkdir(streamer_directory)
 
 
-def start_recording(filename: str, full_path: str, streamer_name: str, twitch_oauth_token):
+def start_recording(filename: str, full_path: str, streamer_name: str, twitch_oauth_token: str):
     thread = RecordingThread(streamer_name, filename, full_path, twitch_oauth_token, recording_thread_finished_callback)
     thread.start()
     recording_threads[streamer_name] = thread

@@ -26,7 +26,7 @@ class RecordingThread(threading.Thread):
         self.thread_finished_callback(self.streamer_name, self.filename, self.full_path)
 
     @staticmethod
-    def start_recording(streamer_name: str, full_path: str, twitch_oauth_token):
+    def start_recording(streamer_name: str, full_path: str, twitch_oauth_token: str):
         params = ["streamlink", "-o", full_path, f"https://www.twitch.tv/{streamer_name}", "best",
                   "--twitch-disable-hosting", "--twitch-disable-ads"]
         if twitch_oauth_token is not "":
