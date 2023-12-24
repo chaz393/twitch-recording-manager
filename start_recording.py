@@ -255,7 +255,14 @@ def start_recording_if_not_already(streams: dict):
             filename = f"{streamer_name}_TwitchVOD_{current_time}_{stream_title}.mp4"
             full_path = streamer_directory + filename
             create_streamer_folder_if_not_exists(streamer_directory)
-            start_recording(filename, full_path, streamer_name, Config.TWITCH_OAUTH_TOKEN )
+            start_recording(filename, full_path, streamer_name, get_twitch_oauth_token_from_config())
+
+
+def get_twitch_oauth_token_from_config():
+    try:
+        return Config.TWITCH_OAUTH_TOKEN
+    except AttributeError:
+        return ""
 
 
 def does_process_exist_for_streamer(streamer_name: str):
