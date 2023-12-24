@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # twitch-recording-manager (forked)
+=======
+# twitch-recording-manager
+>>>>>>> adac535 (Add Streamlink --twitch-api-header option)
 This project will automate the recording of twitch streams. The recording is done using Streamlink
 
 

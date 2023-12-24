@@ -7,7 +7,10 @@ from RecordingThread import RecordingThread
 from datetime import datetime
 from config import Config
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> adac535 (Add Streamlink --twitch-api-header option)
 def start():
     while True:
         try:
@@ -255,7 +258,11 @@ def start_recording_if_not_already(streams: dict):
             filename = f"{streamer_name}_TwitchVOD_{current_time}_{stream_title}.mp4"
             full_path = streamer_directory + filename
             create_streamer_folder_if_not_exists(streamer_directory)
+<<<<<<< HEAD
             start_recording(filename, full_path, streamer_name)
+=======
+            start_recording(filename, full_path, streamer_name, Config.TWITCH_OAUTH_TOKEN )
+>>>>>>> adac535 (Add Streamlink --twitch-api-header option)
 
 
 def does_process_exist_for_streamer(streamer_name: str):
@@ -267,8 +274,13 @@ def create_streamer_folder_if_not_exists(streamer_directory: str):
         os.mkdir(streamer_directory)
 
 
+<<<<<<< HEAD
 def start_recording(filename: str, full_path: str, streamer_name: str):
     thread = RecordingThread(streamer_name, filename, full_path, recording_thread_finished_callback)
+=======
+def start_recording(filename: str, full_path: str, streamer_name: str, twitch_oauth_token):
+    thread = RecordingThread(streamer_name, filename, full_path, twitch_oauth_token, recording_thread_finished_callback)
+>>>>>>> adac535 (Add Streamlink --twitch-api-header option)
     thread.start()
     recording_threads[streamer_name] = thread
 
@@ -290,5 +302,13 @@ recording_threads = {}
 access_token = ""
 access_token_expiration = 0
 
+<<<<<<< HEAD
+=======
+if Config.TWITCH_OAUTH_TOKEN != "":
+    twitch_oauth_token = Config.TWITCH_OAUTH_TOKEN
+else:
+    Config.TWITCH_OAUTH_TOKEN = None
+
+>>>>>>> adac535 (Add Streamlink --twitch-api-header option)
 if __name__ == "__main__":
     start()
