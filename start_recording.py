@@ -7,6 +7,7 @@ from RecordingThread import RecordingThread
 from datetime import datetime
 from config import Config
 
+
 def start():
     while True:
         try:
