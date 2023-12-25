@@ -6,4 +6,5 @@ class Config:
     RECORDING_FINISHED_HOOK_SCRIPT = ""
     INFLUX_REPORTING_URL = ""
     INFLUX_LIVE_STREAMERS_REPORTING_PAYLOAD = ""
+    TWITCH_OAUTH_TOKEN = ""
     REFRESH_INTERVAL = 60  # interval in seconds to refresh streams
